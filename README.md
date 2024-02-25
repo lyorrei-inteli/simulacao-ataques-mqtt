@@ -16,56 +16,56 @@ O ambiente local foi configurado utilizando Docker e o Mosquitto como broker MQT
 
 1. **Criação do Ambiente Docker:**
 
-    ```bash
-    mkdir mqtt5
-    cd mqtt5
-    mkdir config data log
-    ```
+   ```bash
+   mkdir mqtt5
+   cd mqtt5
+   mkdir config data log
+   ```
 
 2. **Configuração do Mosquitto:**
 
-    Arquivo `config/mosquitto.conf`:
+   Arquivo `config/mosquitto.conf`:
 
-    ```
-    allow_anonymous true
-    listener 1883
-    listener 9001 protocol websockets
-    persistence true
-    password_file /mosquitto/config/pwfile
-    persistence_file mosquitto.db
-    persistence_location /mosquitto/data/
-    ```
+   ```
+   allow_anonymous true
+   listener 1883
+   listener 9001 protocol websockets
+   persistence true
+   password_file /mosquitto/config/pwfile
+   persistence_file mosquitto.db
+   persistence_location /mosquitto/data/
+   ```
 
 3. **Docker Compose:**
 
-    Arquivo `docker-compose.yml`:
+   Arquivo `docker-compose.yml`:
 
-    ```yaml
-    version: "3.7"
-    services:
-      mqtt5:
-        image: eclipse-mosquitto
-        container_name: mqtt5
-        ports:
-          - "1883:1883" # Default MQTT port
-          - "9001:9001" # MQTT port for WebSockets
-        volumes:
-          - ./config:/mosquitto/config:rw
-          - ./data:/mosquitto/data:rw
-          - ./log:/mosquitto/log:rw
-        restart: unless-stopped
-        deploy:
-          resources:
-            limits:
-              cpus: '0.01'
-              memory: 100M
-    ```
+   ```yaml
+   version: "3.7"
+   services:
+     mqtt5:
+       image: eclipse-mosquitto
+       container_name: mqtt5
+       ports:
+         - "1883:1883" # Default MQTT port
+         - "9001:9001" # MQTT port for WebSockets
+       volumes:
+         - ./config:/mosquitto/config:rw
+         - ./data:/mosquitto/data:rw
+         - ./log:/mosquitto/log:rw
+       restart: unless-stopped
+       deploy:
+         resources:
+           limits:
+             cpus: "0.01"
+             memory: 100M
+   ```
 
-    O comando para iniciar o ambiente:
+   O comando para iniciar o ambiente:
 
-    ```bash
-    docker-compose -p mqtt5 up -d
-    ```
+   ```bash
+   docker-compose -p mqtt5 up -d
+   ```
 
 ## Análise Aprofundada das Vulnerabilidades do MQTT
 
@@ -78,9 +78,11 @@ A reutilização de ClientIDs em diferentes sessões é uma vulnerabilidade sign
 **Evidência de Vulnerabilidade:**
 
 1. **Conexão Inicial com Cliente Legítimo:**
+
    ```bash
    mosquitto_sub -h localhost -t 'test/topic' -i "ClientID"
    ```
+
    Este comando conecta um cliente legítimo ao broker MQTT, subscrevendo a um tópico 'test/topic' com um ClientID específico.
 
 2. **Interrupção pela Reutilização do ClientID:**
@@ -107,7 +109,7 @@ A permissão de publicação anônima em tópicos é uma séria ameaça à integ
 
 **Cenário de Ataque: Ataque de Negação de Serviço (DoS)**
 
-A limitação de recursos no ambiente Docker é uma preocupação para a disponibilidade do MQTT. Atacantes podem explorar essas limitações, lançando ataques de DoS que sobrecarregam o broker com requisições excessivas, seja em volume de mensagens ou número de conexões, resultando em degradação de serviço ou inoperância total.
+A limitação de recursos no ambiente Docker é uma preocupação para a disponibilidade do MQTT. Atacantes podem explorar essas limitações facilmente caso não haja um sistema de autenticação ou caso as credenciais sejam vazadas, através de ataques de DoS que sobrecarregam o broker com requisições excessivas, seja em volume de mensagens ou número de conexões, resultando em degradação de serviço ou inoperância total.
 
 **Evidência de Vulnerabilidade:**
 
@@ -127,3 +129,4 @@ Para cada uma das vulnerabilidades identificadas, as seguintes medidas de mitiga
 - **Disponibilidade:** Alocar recursos de forma dinâmica e implementar soluções de escalabilidade automática para o broker MQTT pode ajudar a mitigar ataques de DoS. Ferramentas de monitoramento e detecção de anomalias também são essenciais para identificar e responder rapidamente a ataques potenciais.
 
 Estas recomendações, quando implementadas, podem ajudar significativamente a fortalecer a segurança de ambientes que utilizam o protocolo MQTT, protegendo-os contra uma ampla gama de ameaças.
+
