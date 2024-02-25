@@ -66,7 +66,7 @@ O ambiente local foi configurado utilizando Docker e o Mosquitto como broker MQT
     ```bash
     docker-compose -p mqtt5 up -d
     ```
-    
+
 ## Análise Aprofundada das Vulnerabilidades do MQTT
 
 ### Confiabilidade
@@ -124,8 +124,6 @@ Para cada uma das vulnerabilidades identificadas, as seguintes medidas de mitiga
 
 - **Confiabilidade:** Implementar um sistema robusto de gerenciamento de sessões que inclua mecanismos de autenticação e autorização mais sofisticados. Utilizar tokens de sessão únicos e de curta duração pode ajudar a prevenir a reutilização maliciosa de ClientIDs.
 - **Integridade:** Desabilitar completamente a opção `allow_anonymous` e estabelecer um sistema de controle de acesso baseado em listas de controle de acesso (ACL) e certificados digitais para autenticação. Além disso, a adoção de criptografia TLS/SSL para comunicações MQTT pode proteger contra a interceptação e modificação de mensagens.
-- **Disponibilidade:** Alocar recursos de forma dinâmica e implementar soluções de escalabilidade autom
-
-ática para o broker MQTT pode ajudar a mitigar ataques de DoS. Ferramentas de monitoramento e detecção de anomalias também são essenciais para identificar e responder rapidamente a ataques potenciais.
+- **Disponibilidade:** Alocar recursos de forma dinâmica e implementar soluções de escalabilidade automática para o broker MQTT pode ajudar a mitigar ataques de DoS. Ferramentas de monitoramento e detecção de anomalias também são essenciais para identificar e responder rapidamente a ataques potenciais.
 
 Estas recomendações, quando implementadas, podem ajudar significativamente a fortalecer a segurança de ambientes que utilizam o protocolo MQTT, protegendo-os contra uma ampla gama de ameaças.
