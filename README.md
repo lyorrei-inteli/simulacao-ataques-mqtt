@@ -91,6 +91,11 @@ A reutilização de ClientIDs em diferentes sessões é uma vulnerabilidade sign
    ```
    Executar este comando em uma nova sessão, utilizando o mesmo ClientID, resultará na desconexão do cliente legítimo anterior. Este comportamento pode ser abusado para desestabilizar a comunicação MQTT, afetando a confiabilidade do sistema.
 
+**Simulação de Ataque:**
+![alt text](<image/Captura de tela de 2024-02-25 18-25-50.png>)
+![alt text](<image/Captura de tela de 2024-02-25 18-26-19.png>)
+![alt text](<image/Captura de tela de 2024-02-25 18-26-13.png>)
+
 ### Integridade
 
 **Cenário de Ataque: Publicação Não Autorizada em Tópicos**
@@ -104,6 +109,10 @@ A permissão de publicação anônima em tópicos é uma séria ameaça à integ
    mosquitto_pub -h localhost -t 'critical/topic' -m 'Malicious payload'
    ```
    Este comando ilustra como um atacante pode facilmente publicar uma mensagem maliciosa em um tópico crítico, sem necessidade de autenticação. A mensagem pode ser projetada para causar disrupção operacional, manipular dispositivos IoT ou disseminar informações falsas.
+
+**Simulação de Ataque:**
+![alt text](<image/Captura de tela de 2024-02-25 18-29-39.png>)
+![alt text](<image/Captura de tela de 2024-02-25 18-29-45.png>)
 
 ### Disponibilidade
 
@@ -119,6 +128,12 @@ A limitação de recursos no ambiente Docker é uma preocupação para a disponi
    while true; do mosquitto_pub -h localhost -t 'flood/topic' -m 'Payload'; done
    ```
    Este comando cria um fluxo contínuo de mensagens para o broker, o que, em um cenário real de ataque, poderia ser amplificado por vários atacantes simultâneos, causando uma sobrecarga significativa no sistema.
+
+**Simulação de Ataque:**
+![alt text](<image/Captura de tela de 2024-02-25 18-35-59.png>)
+![alt text](<image/Captura de tela de 2024-02-25 18-35-40.png>)
+![alt text](<image/Captura de tela de 2024-02-25 18-35-48.png>)
+
 
 ## Recomendações Detalhadas
 
