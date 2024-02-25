@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  mqtt5:
+    image: eclipse-mosquitto
+    container_name: mqtt5
+    ports:
+      - "1880:1880" # Default MQTT port
+      - "9001:9001" # Default MQTT port for WebSockets
+    volumes:
+      - ./config:/mosquitto/config:rw
+      - ./data:/mosquitto/data:rw
+      - ./log:/mosquitto/log:rw
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.01'
+          memory: 100M
+
+volumes:
+  config:
+  data:
+  log:
+
+networks:
+  default:
+    name: mqtt5-network
