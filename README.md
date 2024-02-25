@@ -66,73 +66,66 @@ O ambiente local foi configurado utilizando Docker e o Mosquitto como broker MQT
     ```bash
     docker-compose -p mqtt5 up -d
     ```
-
-## Análise de Vulnerabilidades
-
-### Confiabilidade
-
-**Cenário:** Reutilização do ClientID em sessões diferentes.
-
-**Evidência de Vulnerabilidade:**
-
-Ao conectar-se com o mesmo ClientID em uma nova sessão, a sessão anterior é desconectada automaticamente pelo broker, o que pode ser explorado para interromper conexões legítimas.
-
-**Comando Simulado:**
-
-```bash
-mosquitto_sub -h localhost -t 'test/topic' -i "ClientID"
-# Em outra sessão
-mosquitto_sub -h localhost -t 'test/topic' -i "ClientID"
-```
-
-### Integridade
-
-**Cenário:** Publicação não autorizada em um tópico.
-
-**Evidência de Vulnerabilidade:**
-
-A configuração `allow_anonymous true` permite que qualquer cliente publique em qualquer tópico, o que pode levar à disseminação de mensagens maliciosas ou incorretas.
-
-**Comando Simulado:**
-
-```bash
-mosquitto_pub -h localhost -t 'critical/topic' -m 'Malicious payload'
-```
-
-### Disponibilidade
-
-**Cenário:** Ataque de negação de serviço (DoS) através do esgotamento de recursos.
-
-**Evidência de Vulnerabilidade:**
-
-Os limites de recursos definidos no `docker-compose.yml` podem ser insuficientes para proteger contra ataques de DoS, onde um atacante cria múltiplas conexões ou envia um volume alto de mensagens para sobrecarregar o broker.
-
-**Comando Simulado:**
-
-Simulação de múltiplas conexões ou publicações em massa para esgotar os recursos do broker.
-
-```bash
-# Executado várias vezes para simular múltiplas conexões
-mosquitto_pub -h localhost -t 'flood/topic' -m 'Payload'
-```
-
-## Recomendações de Segurança
+    
+## Análise Aprofundada das Vulnerabilidades do MQTT
 
 ### Confiabilidade
 
-- Implementar autenticação e autorização robustas para clientes, utilizando tokens ou certificados digitais.
-- Limitar o número de conexões simultâneas por ClientID.
+**Cenário de Ataque: Reutilização do ClientID**
+
+A reutilização de ClientIDs em diferentes sessões é uma vulnerabilidade significativa no MQTT. Quando um novo cliente se conecta usando um ClientID que já está em uso, o broker MQTT desconecta automaticamente a sessão anterior que estava usando esse ID. Essa funcionalidade pode ser explorada por um atacante para interromper serviços críticos, desautorizando dispositivos legítimos de suas funções regulares.
+
+**Evidência de Vulnerabilidade:**
+
+1. **Conexão Inicial com Cliente Legítimo:**
+   ```bash
+   mosquitto_sub -h localhost -t 'test/topic' -i "ClientID"
+   ```
+   Este comando conecta um cliente legítimo ao broker MQTT, subscrevendo a um tópico 'test/topic' com um ClientID específico.
+
+2. **Interrupção pela Reutilização do ClientID:**
+   ```bash
+   mosquitto_sub -h localhost -t 'test/topic' -i "ClientID"
+   ```
+   Executar este comando em uma nova sessão, utilizando o mesmo ClientID, resultará na desconexão do cliente legítimo anterior. Este comportamento pode ser abusado para desestabilizar a comunicação MQTT, afetando a confiabilidade do sistema.
 
 ### Integridade
 
-- Desabilitar `allow_anonymous` e configurar um sistema de autenticação baseado em credenciais ou certificados.
-- Utilizar ACLs (Access Control Lists) para restringir tópicos a clientes específicos.
+**Cenário de Ataque: Publicação Não Autorizada em Tópicos**
+
+A permissão de publicação anônima em tópicos é uma séria ameaça à integridade dos dados no MQTT. Com a configuração `allow_anonymous true`, qualquer cliente pode publicar mensagens em qualquer tópico sem autenticação, possibilitando a inserção de dados falsificados ou mal-intencionados.
+
+**Evidência de Vulnerabilidade:**
+
+1. **Publicação Anônima:**
+   ```bash
+   mosquitto_pub -h localhost -t 'critical/topic' -m 'Malicious payload'
+   ```
+   Este comando ilustra como um atacante pode facilmente publicar uma mensagem maliciosa em um tópico crítico, sem necessidade de autenticação. A mensagem pode ser projetada para causar disrupção operacional, manipular dispositivos IoT ou disseminar informações falsas.
 
 ### Disponibilidade
 
-- Ajustar a alocação de recursos no `docker-compose.yml` para lidar com cargas elevadas.
-- Implementar monitoramento para detectar e mitigar ataques de DoS rapidamente.
+**Cenário de Ataque: Ataque de Negação de Serviço (DoS)**
 
-## Conclusão
+A limitação de recursos no ambiente Docker é uma preocupação para a disponibilidade do MQTT. Atacantes podem explorar essas limitações, lançando ataques de DoS que sobrecarregam o broker com requisições excessivas, seja em volume de mensagens ou número de conexões, resultando em degradação de serviço ou inoperância total.
 
-A análise de segurança revelou várias vulnerabilidades potenciais no setup MQTT que podem afetar os pilares da CIA. As recomendações fornecidas visam fortalecer a segurança e a resiliência do sistema MQTT em uso, garantindo a proteção adequada contra ataques maliciosos.
+**Evidência de Vulnerabilidade:**
+
+1. **Simulação de Carga Excessiva:**
+   A simulação de um ataque de DoS pode ser feita através de scripts ou ferramentas que geram um grande número de conexões ou publicações em massa, visando esgotar os recursos do broker. Um exemplo simplificado seria o uso de um loop para publicar mensagens repetidamente:
+   ```bash
+   while true; do mosquitto_pub -h localhost -t 'flood/topic' -m 'Payload'; done
+   ```
+   Este comando cria um fluxo contínuo de mensagens para o broker, o que, em um cenário real de ataque, poderia ser amplificado por vários atacantes simultâneos, causando uma sobrecarga significativa no sistema.
+
+## Recomendações Detalhadas
+
+Para cada uma das vulnerabilidades identificadas, as seguintes medidas de mitigação são recomendadas:
+
+- **Confiabilidade:** Implementar um sistema robusto de gerenciamento de sessões que inclua mecanismos de autenticação e autorização mais sofisticados. Utilizar tokens de sessão únicos e de curta duração pode ajudar a prevenir a reutilização maliciosa de ClientIDs.
+- **Integridade:** Desabilitar completamente a opção `allow_anonymous` e estabelecer um sistema de controle de acesso baseado em listas de controle de acesso (ACL) e certificados digitais para autenticação. Além disso, a adoção de criptografia TLS/SSL para comunicações MQTT pode proteger contra a interceptação e modificação de mensagens.
+- **Disponibilidade:** Alocar recursos de forma dinâmica e implementar soluções de escalabilidade autom
+
+ática para o broker MQTT pode ajudar a mitigar ataques de DoS. Ferramentas de monitoramento e detecção de anomalias também são essenciais para identificar e responder rapidamente a ataques potenciais.
+
+Estas recomendações, quando implementadas, podem ajudar significativamente a fortalecer a segurança de ambientes que utilizam o protocolo MQTT, protegendo-os contra uma ampla gama de ameaças.
